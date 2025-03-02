@@ -23,7 +23,7 @@ public class AuthController {
 
     @PostMapping("give/token")
     @ResponseBody
-    public ResponseEntity<JwtResponse> giveToken(@RequestBody UserLogin userId) {
+    public ResponseEntity<JwtResponse> giveToken(@RequestParam UserLogin userId) {
         return ResponseEntity.ok(userService.loginUser(userId.userId()));
     }
 
@@ -33,6 +33,16 @@ public class AuthController {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String token = authorizationHeader.substring(7);
             return ResponseEntity.ok(userService.checkToken(authentication, token, roles));
+        }
+        throw new IllegalArgumentException("Invalid Authorization header");
+    }
+
+    @PostMapping("give/profile")
+    @ResponseBody
+    public ResponseEntity<Object> giveProfile(Authentication authentication, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String token = authorizationHeader.substring(7);
+            return ResponseEntity.ok(userService.getProfile(authentication, token));
         }
         throw new IllegalArgumentException("Invalid Authorization header");
     }
