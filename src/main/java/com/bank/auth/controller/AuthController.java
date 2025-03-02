@@ -2,12 +2,16 @@ package com.bank.auth.controller;
 
 import com.bank.auth.model.dto.input.UserLogin;
 import com.bank.auth.model.dto.output.JwtResponse;
+import com.bank.auth.model.enumeration.RoleEnum;
 import com.bank.auth.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -16,9 +20,20 @@ import java.util.UUID;
 public class AuthController {
 
     private final UserService userService;
+
     @PostMapping("give/token")
     @ResponseBody
-    public JwtResponse giveToken(@RequestBody UserLogin userId){
-        return userService.loginUser(userId.userId());
+    public ResponseEntity<JwtResponse> giveToken(@RequestBody UserLogin userId) {
+        return ResponseEntity.ok(userService.loginUser(userId.userId()));
+    }
+
+    @PostMapping("check/token")
+    @ResponseBody
+    public ResponseEntity<Boolean> checkToken(Authentication authentication, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestParam List<RoleEnum> roles) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String token = authorizationHeader.substring(7);
+            return ResponseEntity.ok(userService.checkToken(authentication, token, roles));
+        }
+        throw new IllegalArgumentException("Invalid Authorization header");
     }
 }
