@@ -46,4 +46,13 @@ public class AuthController {
         }
         throw new IllegalArgumentException("Invalid Authorization header");
     }
+
+    @GetMapping("logout")
+    public ResponseEntity<Object> logout(Authentication authentication, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String token = authorizationHeader.substring(7);
+            return ResponseEntity.ok(userService.logout(authentication, token));
+        }
+        throw new IllegalArgumentException("Invalid Authorization header");
+    }
 }

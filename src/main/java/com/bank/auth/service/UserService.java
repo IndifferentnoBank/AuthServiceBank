@@ -4,6 +4,7 @@ import com.bank.auth.exception.ForbiddenException;
 import com.bank.auth.exception.NotFoundException;
 import com.bank.auth.exception.UnauthorizedException;
 import com.bank.auth.model.dto.output.JwtResponse;
+import com.bank.auth.model.entity.DeletedTokens;
 import com.bank.auth.model.entity.User;
 import com.bank.auth.model.enumeration.RoleEnum;
 import com.bank.auth.model.util.JwtTokenUtils;
@@ -67,5 +68,21 @@ public class UserService {
         }
 
         return user;
+    }
+
+    @SneakyThrows
+    public Boolean logout(Authentication authentication, String token) {
+        UUID userId = tokenUtils.getUserIdFromAuthentication(authentication);
+        //отправить запрос в UserService
+        //User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        User user = new User(UUID.fromString("123e4567-e89b-12d3-a456-426655440000"), "Arthur", "Isakhanyan", "Artur2506", "karla-an@mail.ru", RoleEnum.USER);
+
+        if (deletedTokensRepository.findById(token).isPresent()) {
+            throw new UnauthorizedException("Пользватель не авторизован");
+        }
+
+        DeletedTokens deletedToken = DeletedTokens.of(token);
+        deletedTokensRepository.save(deletedToken);
+        return true;
     }
 }
