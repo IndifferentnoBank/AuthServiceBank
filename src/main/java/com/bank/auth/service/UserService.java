@@ -12,15 +12,9 @@ import com.bank.auth.repository.DeletedTokensRepository;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
 
-import javax.naming.ServiceUnavailableException;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,14 +25,13 @@ public class UserService {
 
     private final JwtTokenUtils tokenUtils;
     private final DeletedTokensRepository deletedTokensRepository;
-    private final RestTemplate restTemplate;
     private final String userServiceUrl = "http://user-service/api/users";
 
     @SneakyThrows
     public JwtResponse loginUser(UUID userId) {
         if (userId == null) {
-            log.error("userId ревен null");
-            throw new NotFoundException("userId не может быть ревен null");
+            log.error("userId is null");
+            throw new NotFoundException("userId cannot be null");
         }
 
         String token = tokenUtils.generateToken(userId);
@@ -49,15 +42,17 @@ public class UserService {
     public Boolean checkToken(Authentication authentication, String token, List<RoleEnum> roles) {
         UUID userId = tokenUtils.getUserIdFromAuthentication(authentication);
         //Отправка запроса в UserService
-        User user = sendRequest(userId);
+        User user = new User(UUID.fromString(userId.toString()), "Arthur", "Isakhanyan", "Artur2506", "karla-an@mail.ru", RoleEnum.CUSTOMER);
+
+        //User user = sendRequest(userId);
 
         if (deletedTokensRepository.findById(token).isPresent()) {
-            throw new UnauthorizedException("Пользватель не авторизован");
+            throw new UnauthorizedException("The user is not authorized");
         }
 
         if (!roles.contains(user.getRole())) {
             //Добавить исключение для "нет достаточных прав"
-            throw new ForbiddenException("У пользователя с ID = " + userId.toString() + " нет необходимых прав");
+            throw new ForbiddenException("The user with ID = " + userId + " does not have the necessary rights");
         }
 
         return true;
@@ -67,10 +62,12 @@ public class UserService {
     public User getProfile(Authentication authentication, String token) {
         UUID userId = tokenUtils.getUserIdFromAuthentication(authentication);
         //Отправка запроса в UserService
-        User user = sendRequest(userId);
+        User user = new User(UUID.fromString("123e4567-e89b-12d3-a456-426655440000"), "Arthur", "Isakhanyan", "Artur2506", "karla-an@mail.ru", RoleEnum.CUSTOMER);
+
+        //User user = sendRequest(userId);
 
         if (deletedTokensRepository.findById(token).isPresent()) {
-            throw new UnauthorizedException("Пользватель не авторизован");
+            throw new UnauthorizedException("The user is not authorized");
         }
 
         return user;
@@ -80,32 +77,16 @@ public class UserService {
     public Boolean logout(Authentication authentication, String token) {
         UUID userId = tokenUtils.getUserIdFromAuthentication(authentication);
         //Отправка запроса в UserService
-        User user = sendRequest(userId);
+        User user = new User(UUID.fromString("123e4567-e89b-12d3-a456-426655440000"), "Arthur", "Isakhanyan", "Artur2506", "karla-an@mail.ru", RoleEnum.CUSTOMER);
+
+        //User user = sendRequest(userId);
 
         if (deletedTokensRepository.findById(token).isPresent()) {
-            throw new UnauthorizedException("Пользватель не авторизован");
+            throw new UnauthorizedException("The user is not authorized");
         }
 
         DeletedTokens deletedToken = DeletedTokens.of(token);
         deletedTokensRepository.save(deletedToken);
         return true;
-    }
-
-    @SneakyThrows
-    private User sendRequest(UUID userId) {
-        String url = userServiceUrl + "/" + userId;
-        try {
-            ResponseEntity<User> response = restTemplate.getForEntity(url, User.class);
-            return response.getBody();
-        } catch (HttpClientErrorException ex) {
-            log.error("Клиентская ошибка при запросе к UserService: {}", ex.getMessage());
-            throw new NotFoundException("Пользователь не найден");
-        } catch (HttpServerErrorException ex) {
-            log.error("Ошибка сервера UserService: {}", ex.getMessage());
-            throw new ServiceUnavailableException("Сервис пользователей временно недоступен");
-        } catch (ResourceAccessException ex) {
-            log.error("Проблема с доступом к UserService: {}", ex.getMessage());
-            throw new ServiceUnavailableException("Ошибка подключения к сервису пользователей");
-        }
     }
 }

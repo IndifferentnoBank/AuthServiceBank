@@ -6,6 +6,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum RoleEnum {
-    USER,
+    CUSTOMER,
     STAFF
 }

@@ -1,6 +1,5 @@
 package com.bank.auth.controller;
 
-import com.bank.auth.model.dto.input.UserLogin;
 import com.bank.auth.model.dto.output.JwtResponse;
 import com.bank.auth.model.enumeration.RoleEnum;
 import com.bank.auth.service.UserService;
@@ -12,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -23,8 +23,8 @@ public class AuthController {
 
     @PostMapping("give/token")
     @ResponseBody
-    public ResponseEntity<JwtResponse> giveToken(@RequestParam UserLogin userId) {
-        return ResponseEntity.ok(userService.loginUser(userId.userId()));
+    public ResponseEntity<JwtResponse> giveToken(@RequestParam("userId") UUID userId) {
+        return ResponseEntity.ok(userService.loginUser(userId));
     }
 
     @PostMapping("check/token")
@@ -47,7 +47,7 @@ public class AuthController {
         throw new IllegalArgumentException("Invalid Authorization header");
     }
 
-    @GetMapping("logout")
+    @PostMapping("logout")
     public ResponseEntity<Object> logout(Authentication authentication, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String token = authorizationHeader.substring(7);
