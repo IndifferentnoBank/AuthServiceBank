@@ -1,0 +1,29 @@
+services:
+  # Сервис для вашего Spring-приложения
+  app:
+    build: .
+    ports:
+      - "8083:8080"  # Пробрасываем порт 8080 на хост
+    depends_on:
+      - db  # Указываем, что приложение зависит от базы данных
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/auth
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL-AUTO: update  # Автоматическое обновление схемы БД
+
+  # Сервис для PostgreSQL
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth
+    expose:
+      - "5432"  # Пробрасываем порт 5432 на хост
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Сохраняем данные БД на хосте
+
+# Определяем том для хранения данных PostgreSQL
+volumes:
+  postgres_data:
